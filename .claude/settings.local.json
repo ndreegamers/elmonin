@@ -1,0 +1,12 @@
+{
+  "permissions": {
+    "allow": [
+      "WebFetch(domain:raffledup.com)",
+      "WebFetch(domain:apiperu.dev)",
+      "WebFetch(domain:docs.apiperu.dev)",
+      "WebFetch(domain:pchujoy.com)",
+      "WebFetch(domain:supabase.com)",
+      "Bash(npx create-next-app@latest . --typescript --tailwind --app --src-dir --no-eslint --import-alias \"@/*\" --yes)"
+    ]
+  }
+}
