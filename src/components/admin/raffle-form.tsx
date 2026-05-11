@@ -1,8 +1,9 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { motion } from "framer-motion";
-import { Loader2, Plus, Pencil, Trophy, Calendar, Hash, Tag, Image as ImageIcon } from "lucide-react";
+import { Loader2, Plus, Pencil, Trophy, Calendar, Hash, Tag, Image as ImageIcon, Upload, X } from "lucide-react";
+import Image from "next/image";
 import { toast } from "sonner";
 import { Raffle } from "@/lib/types";
 
@@ -14,6 +15,9 @@ interface RaffleFormProps {
 
 export function RaffleForm({ onCreated, editRaffle, onCancel }: RaffleFormProps) {
   const [loading, setLoading] = useState(false);
+  const [uploadingImage, setUploadingImage] = useState(false);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const fileRef = useRef<HTMLInputElement>(null);
   const isEditMode = !!editRaffle;
   const [form, setForm] = useState({
     title: "",
@@ -36,8 +40,36 @@ export function RaffleForm({ onCreated, editRaffle, onCancel }: RaffleFormProps)
         draw_date: editRaffle.draw_date.slice(0, 16),
         code_prefix: editRaffle.code_prefix,
       });
+      setImagePreview(editRaffle.image_url);
     }
   }, [editRaffle]);
+
+  async function handleImageFile(file: File) {
+    if (!file.type.startsWith("image/")) {
+      toast.error("Solo se permiten imágenes");
+      return;
+    }
+    setImagePreview(URL.createObjectURL(file));
+    setUploadingImage(true);
+    try {
+      const fd = new FormData();
+      fd.append("image", file);
+      const res = await fetch("/api/admin/upload-image", { method: "POST", body: fd });
+      const data = await res.json();
+      if (!res.ok) {
+        toast.error(data.error ?? "Error al subir imagen");
+        setImagePreview(null);
+        return;
+      }
+      set("image_url", data.url);
+      toast.success("Imagen subida");
+    } catch {
+      toast.error("Error de conexión al subir imagen");
+      setImagePreview(null);
+    } finally {
+      setUploadingImage(false);
+    }
+  }
 
   function set(field: string, value: string) {
     setForm((prev) => ({ ...prev, [field]: value }));
@@ -53,6 +85,11 @@ export function RaffleForm({ onCreated, editRaffle, onCancel }: RaffleFormProps)
 
     if (form.code_prefix.length < 2 || form.code_prefix.length > 3) {
       toast.error("El prefijo debe tener 2-3 letras");
+      return;
+    }
+
+    if (uploadingImage) {
+      toast.error("Espera a que termine de subir la imagen");
       return;
     }
 
@@ -137,14 +174,54 @@ export function RaffleForm({ onCreated, editRaffle, onCancel }: RaffleFormProps)
         <div className="sm:col-span-2 flex flex-col gap-2">
           <label className={labelClass}>
             <ImageIcon className="w-3 h-3 inline mr-1" />
-            URL imagen del premio *
+            Imagen del premio *
           </label>
+
+          {imagePreview ? (
+            <div className="relative rounded-xl overflow-hidden border border-[#2A2A3E] bg-[#1A1A2E]">
+              <div className="relative w-full aspect-[4/3]">
+                <Image
+                  src={imagePreview}
+                  alt="Preview"
+                  fill
+                  className="object-cover"
+                  unoptimized
+                />
+              </div>
+              {uploadingImage && (
+                <div className="absolute inset-0 bg-[#0A0A0F]/70 flex items-center justify-center gap-2">
+                  <Loader2 className="w-5 h-5 text-[#00F0FF] animate-spin" />
+                  <span className="text-[#00F0FF] text-sm font-inter">Subiendo...</span>
+                </div>
+              )}
+              {!uploadingImage && (
+                <button
+                  type="button"
+                  onClick={() => { setImagePreview(null); set("image_url", ""); if (fileRef.current) fileRef.current.value = ""; }}
+                  className="absolute top-2 right-2 bg-[#0A0A0F]/80 text-[#94A3B8] hover:text-[#EF4444] rounded-full p-1.5 transition-colors"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              )}
+            </div>
+          ) : (
+            <button
+              type="button"
+              onClick={() => fileRef.current?.click()}
+              className="w-full flex flex-col items-center justify-center gap-3 border-2 border-dashed border-[#2A2A3E] hover:border-[#00F0FF]/40 bg-[#1A1A2E] rounded-xl py-8 transition-all duration-200 text-[#94A3B8] hover:text-[#00F0FF]"
+            >
+              <Upload className="w-8 h-8" />
+              <span className="text-sm font-inter">Haz clic para seleccionar imagen</span>
+              <span className="text-xs text-[#94A3B8]/50">PNG, JPG, WEBP</span>
+            </button>
+          )}
+
           <input
-            type="url"
-            value={form.image_url}
-            onChange={(e) => set("image_url", e.target.value)}
-            placeholder="https://..."
-            className={inputClass}
+            ref={fileRef}
+            type="file"
+            accept="image/*"
+            onChange={(e) => { const f = e.target.files?.[0]; if (f) handleImageFile(f); }}
+            className="hidden"
           />
         </div>
 
@@ -219,7 +296,7 @@ export function RaffleForm({ onCreated, editRaffle, onCancel }: RaffleFormProps)
       <div className="flex flex-col gap-2">
         <button
           type="submit"
-          disabled={loading}
+          disabled={loading || uploadingImage}
           className="w-full flex items-center justify-center gap-3 bg-[#00F0FF] text-[#0A0A0F] font-extrabold text-lg rounded-2xl py-4 transition-all hover:brightness-110 disabled:opacity-50 glow-cyan"
         >
           {loading ? (
