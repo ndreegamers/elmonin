@@ -1,3 +1,5 @@
+export const dynamic = "force-dynamic";
+
 import { RaffleWithStats } from "@/lib/types";
 import { RaffleHero } from "@/components/raffle-hero";
 import { Trophy } from "lucide-react";
