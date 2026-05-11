@@ -57,7 +57,10 @@ export async function GET(request: NextRequest) {
   const apiUrl = process.env.DNI_API_URL;
   const apiToken = process.env.DNI_API_TOKEN;
 
+  console.log("[DNI] apiUrl present:", !!apiUrl, "| apiToken present:", !!apiToken);
+
   if (!apiUrl || !apiToken) {
+    console.error("[DNI] Missing env vars. Keys available:", Object.keys(process.env).filter(k => k.startsWith("DNI")));
     return NextResponse.json(
       { error: "Servicio de consulta DNI no configurado" },
       { status: 503 }
