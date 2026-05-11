@@ -1,7 +1,25 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  /* config options here */
+  images: {
+    remotePatterns: [
+      // Apple Store (preview/mock images)
+      {
+        protocol: "https",
+        hostname: "store.storeimages.cdn-apple.com",
+      },
+      // Supabase Storage (production images)
+      {
+        protocol: "https",
+        hostname: "*.supabase.co",
+      },
+      // Generic HTTPS images
+      {
+        protocol: "https",
+        hostname: "**",
+      },
+    ],
+  },
 };
 
 export default nextConfig;
