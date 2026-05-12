@@ -1,7 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { Ticket, Calendar, Clock, AlertCircle, XCircle } from "lucide-react";
+import { Ticket, Clock, XCircle } from "lucide-react";
 import { VerifyResult, TicketWithRaffle } from "@/lib/types";
 import { formatDate } from "@/lib/utils";
 
@@ -9,47 +9,73 @@ interface TicketListProps {
   result: VerifyResult;
 }
 
-function TicketCard({ ticket }: { ticket: TicketWithRaffle }) {
+function parseTicketCode(code: string): { prefix: string; number: string; hash: string } {
+  const parts = code.split("-");
+  if (parts.length >= 3) {
+    return { prefix: parts[0], number: parts[1], hash: parts[2] };
+  }
+  return { prefix: code, number: "", hash: "" };
+}
+
+function TicketRow({ ticket, isLast }: { ticket: TicketWithRaffle; isLast: boolean }) {
+  const { prefix, number, hash } = parseTicketCode(ticket.ticket_code);
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 10 }}
-      animate={{ opacity: 1, y: 0 }}
-      className="relative rounded-2xl border border-[#00F0FF]/30 bg-[#12121A] overflow-hidden group hover:border-[#00F0FF]/60 transition-all duration-300"
-    >
-      {/* Top glow bar */}
-      <div className="absolute top-0 left-0 right-0 h-0.5 bg-gradient-to-r from-transparent via-[#00F0FF] to-transparent opacity-60" />
+    <div className={`flex items-center gap-3 py-2.5 px-4 ${!isLast ? "border-b border-[#2A2A3E]/40" : ""}`}>
+      <Ticket className="w-3.5 h-3.5 text-[#00F0FF] shrink-0" />
+      <span className="font-orbitron text-[11px] text-[#94A3B8] w-8 shrink-0">{prefix}</span>
+      <span className="font-orbitron font-black text-sm text-[#00F0FF] w-12 shrink-0 tabular-nums">
+        {number}
+      </span>
+      <span className="font-orbitron text-[11px] text-[#8B5CF6] tracking-widest flex-1 tabular-nums">
+        {hash}
+      </span>
+      <div className="flex items-center gap-1 shrink-0">
+        <span className="w-1.5 h-1.5 rounded-full bg-[#22C55E]" />
+        <span className="text-[10px] font-orbitron text-[#22C55E] uppercase">OK</span>
+      </div>
+    </div>
+  );
+}
 
-      <div className="p-5 flex flex-col gap-3">
-        {/* Ticket code — the hero element */}
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <Ticket className="w-4 h-4 text-[#00F0FF]" />
-            <span className="text-xs text-[#94A3B8] font-inter">Tu ticket</span>
-          </div>
-          <div className="bg-[#00F0FF]/10 rounded-lg px-2 py-0.5 border border-[#00F0FF]/20">
-            <span className="text-[10px] font-orbitron text-[#22C55E] font-bold uppercase">
-              Confirmado
+function TicketGroup({ raffleTitle, drawDate, tickets }: {
+  raffleTitle: string;
+  drawDate?: string;
+  tickets: TicketWithRaffle[];
+}) {
+  return (
+    <div className="flex flex-col">
+      {/* Group header */}
+      <div className="flex items-center justify-between px-4 py-3 border-b border-[#2A2A3E]">
+        <div className="flex flex-col gap-0.5">
+          <span className="text-xs font-orbitron text-[#F1F5F9] font-bold leading-tight">
+            {raffleTitle}
+          </span>
+          {drawDate && (
+            <span className="text-[10px] text-[#94A3B8]">
+              Sorteo: {formatDate(drawDate)}
             </span>
-          </div>
-        </div>
-
-        <div className="font-orbitron font-black text-2xl text-[#00F0FF] tracking-wider glow-cyan-sm text-center py-2 bg-[#00F0FF]/5 rounded-xl border border-[#00F0FF]/10">
-          {ticket.ticket_code}
-        </div>
-
-        <div className="flex flex-col gap-1.5">
-          <p className="text-[#F1F5F9] font-inter font-medium text-sm">
-            {ticket.raffle?.title}
-          </p>
-          {ticket.raffle?.draw_date && (
-            <div className="flex items-center gap-1.5 text-[#94A3B8] text-xs font-inter">
-              <Calendar className="w-3 h-3" />
-              Sorteo: {formatDate(ticket.raffle.draw_date)}
-            </div>
           )}
         </div>
+        <div className="flex items-center gap-1.5 bg-[#00F0FF]/10 rounded-lg px-2.5 py-1 border border-[#00F0FF]/20">
+          <Ticket className="w-3 h-3 text-[#00F0FF]" />
+          <span className="font-orbitron font-black text-sm text-[#00F0FF]">{tickets.length}</span>
+        </div>
       </div>
-    </motion.div>
+
+      {/* Column labels */}
+      <div className="flex items-center gap-3 px-4 py-1.5 bg-[#0A0A0F]/30">
+        <span className="w-3.5 shrink-0" />
+        <span className="text-[9px] font-orbitron text-[#94A3B8]/50 uppercase w-8 shrink-0">Serie</span>
+        <span className="text-[9px] font-orbitron text-[#94A3B8]/50 uppercase w-12 shrink-0">Nro.</span>
+        <span className="text-[9px] font-orbitron text-[#94A3B8]/50 uppercase flex-1">Hash</span>
+        <span className="text-[9px] font-orbitron text-[#94A3B8]/50 uppercase shrink-0">Est.</span>
+      </div>
+
+      {/* Ticket rows */}
+      {tickets.map((ticket, idx) => (
+        <TicketRow key={ticket.id} ticket={ticket} isLast={idx === tickets.length - 1} />
+      ))}
+    </div>
   );
 }
 
@@ -70,8 +96,25 @@ export function TicketList({ result }: TicketListProps) {
     );
   }
 
+  // Group tickets by raffle
+  const groups = tickets.reduce<Record<string, { title: string; drawDate?: string; tickets: TicketWithRaffle[] }>>(
+    (acc, ticket) => {
+      const key = ticket.raffle_id;
+      if (!acc[key]) {
+        acc[key] = {
+          title: ticket.raffle?.title ?? "Sorteo",
+          drawDate: ticket.raffle?.draw_date,
+          tickets: [],
+        };
+      }
+      acc[key].tickets.push(ticket);
+      return acc;
+    },
+    {}
+  );
+
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-4">
       {/* Participant greeting */}
       <div className="bg-[#1A1A2E] rounded-xl px-5 py-4 border border-[#2A2A3E]">
         <p className="text-xs text-[#94A3B8] font-orbitron uppercase tracking-wide mb-1">
@@ -87,18 +130,25 @@ export function TicketList({ result }: TicketListProps) {
 
       {/* Approved tickets */}
       {tickets.length > 0 ? (
-        <div className="flex flex-col gap-3">
-          <div className="flex items-center justify-between">
-            <p className="text-xs font-orbitron text-[#94A3B8] uppercase tracking-widest">
-              Tus tickets confirmados
-            </p>
-            <span className="font-orbitron font-bold text-[#00F0FF] text-sm">
-              {tickets.length}
-            </span>
-          </div>
-          {tickets.map((ticket) => (
-            <TicketCard key={ticket.id} ticket={ticket} />
-          ))}
+        <div className="flex flex-col gap-1">
+          <p className="text-xs font-orbitron text-[#94A3B8] uppercase tracking-widest px-1">
+            Tickets confirmados
+          </p>
+          <motion.div
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="rounded-2xl border border-[#00F0FF]/20 bg-[#12121A] overflow-hidden"
+          >
+            {Object.entries(groups).map(([key, group], groupIdx) => (
+              <div key={key} className={groupIdx > 0 ? "border-t border-[#2A2A3E]/60 mt-1" : ""}>
+                <TicketGroup
+                  raffleTitle={group.title}
+                  drawDate={group.drawDate}
+                  tickets={group.tickets}
+                />
+              </div>
+            ))}
+          </motion.div>
         </div>
       ) : (
         <div className="text-center py-4 text-[#94A3B8] text-sm font-inter">

@@ -1,9 +1,10 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useSearchParams, useRouter } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
+import Image from "next/image";
 import {
   Ticket, User, CreditCard, CheckCircle2,
   ChevronLeft, ChevronRight, Loader2, Phone, ArrowLeft
@@ -27,14 +28,12 @@ const STEPS = [
 export function PartiparContent() {
   const searchParams = useSearchParams();
   const raffleId = searchParams.get("raffle");
-  const router = useRouter();
-
   const [raffle, setRaffle] = useState<RaffleWithStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [step, setStep] = useState<Step>(0);
 
   // Form state
-  const [ticketCount, setTicketCount] = useState(1);
+  const [ticketCount, setTicketCount] = useState(5);
   const [dniData, setDniData] = useState<DniLookupResult | null>(null);
   const [phone, setPhone] = useState("");
   const [paymentOpen, setPaymentOpen] = useState(false);
@@ -146,7 +145,7 @@ export function PartiparContent() {
 
   return (
     <main className="flex-1 flex flex-col min-h-screen hero-gradient">
-      <div className="w-full max-w-lg mx-auto px-4 py-8 flex flex-col gap-6">
+      <div className="w-full max-w-5xl mx-auto px-4 py-8 flex flex-col gap-6">
         {/* Back */}
         <Link
           href="/"
@@ -156,20 +155,7 @@ export function PartiparContent() {
           Volver al sorteo
         </Link>
 
-        {/* Header */}
-        <div>
-          <p className="text-xs font-semibold text-[#00F0FF] uppercase tracking-widest mb-1">
-            Participa
-          </p>
-          <h1 className="font-extrabold text-2xl sm:text-3xl text-[#F1F5F9]">
-            {raffle.title}
-          </h1>
-          <p className="text-[#94A3B8] text-sm font-medium mt-1">
-            {formatCurrency(raffle.ticket_price)} por ticket
-          </p>
-        </div>
-
-        {/* Step indicators */}
+        {/* Step indicators — full width above split */}
         <div className="flex items-center gap-2">
           {STEPS.map((s, i) => {
             const Icon = s.icon;
@@ -214,179 +200,200 @@ export function PartiparContent() {
           })}
         </div>
 
-        {/* Step content */}
-        <div className="glass-card rounded-2xl border border-[#2A2A3E] p-6">
-          <AnimatePresence mode="wait">
-            {step === 0 && (
-              <motion.div
-                key="step0"
-                initial={{ opacity: 0, x: 20 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -20 }}
-                className="flex flex-col gap-6"
-              >
-                <div>
-                  <h2 className="font-bold text-[#F1F5F9] text-xl mb-1">
-                    Elige tus tickets
-                  </h2>
-                  <p className="text-[#94A3B8] text-sm font-medium">
-                    Más tickets = más chances de ganar
-                  </p>
-                </div>
-                <TicketSelector
-                  ticketPrice={raffle.ticket_price}
-                  value={ticketCount}
-                  onChange={setTicketCount}
-                />
-              </motion.div>
-            )}
+        {/* Split layout: image left + purchase form right */}
+        <div className="flex flex-col lg:flex-row gap-6 lg:items-start">
 
-            {step === 1 && (
-              <motion.div
-                key="step1"
-                initial={{ opacity: 0, x: 20 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -20 }}
-                className="flex flex-col gap-6"
-              >
-                <div>
-                  <h2 className="font-bold text-[#F1F5F9] text-xl mb-1">
-                    Tus datos
-                  </h2>
-                  <p className="text-[#94A3B8] text-sm font-medium">
-                    Usamos tu DNI para identificarte y asignarte los tickets
-                  </p>
-                </div>
+          {/* Left column — raffle image */}
+          <div className="lg:w-[48%] lg:sticky lg:top-8 flex-shrink-0">
+            <div className="relative w-full aspect-[4/3] rounded-2xl overflow-hidden border border-[#2A2A3E]">
+              <Image
+                src={raffle.image_url}
+                alt={raffle.title}
+                fill
+                className="object-cover"
+                sizes="(max-width: 1024px) 100vw, 48vw"
+                priority
+              />
+            </div>
+          </div>
 
-                <DniInput
-                  onSuccess={(result) => setDniData(result)}
-                  onClear={() => setDniData(null)}
-                />
-
-                <div className="flex flex-col gap-2">
-                  <label className="text-xs font-orbitron text-[#94A3B8] uppercase tracking-widest">
-                    Teléfono
-                  </label>
-                  <div className="relative">
-                    <Phone className={cn(
-                      "absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 transition-colors",
-                      phone.length > 0 && !isPhoneValid ? "text-[#EF4444]" : isPhoneValid ? "text-[#22C55E]" : "text-[#94A3B8]"
-                    )} />
-                    <input
-                      type="tel"
-                      inputMode="numeric"
-                      value={phone}
-                      onChange={(e) => {
-                        const digits = e.target.value.replace(/\D/g, "").slice(0, 9);
-                        setPhone(digits);
-                      }}
-                      placeholder="9xxxxxxxx"
-                      className={cn(
-                        "w-full bg-[#1A1A2E] border rounded-xl px-4 py-3.5 pl-10 text-[#F1F5F9] font-inter focus:outline-none focus:ring-1 transition-all",
-                        phone.length > 0 && !isPhoneValid
-                          ? "border-[#EF4444] focus:border-[#EF4444] focus:ring-[#EF4444]/30"
-                          : isPhoneValid
-                          ? "border-[#22C55E] focus:border-[#22C55E] focus:ring-[#22C55E]/30"
-                          : "border-[#2A2A3E] focus:border-[#00F0FF] focus:ring-[#00F0FF]/30"
-                      )}
+          {/* Right column — purchase flow */}
+          <div className="flex-1 flex flex-col gap-4">
+            {/* Step content */}
+            <div className="glass-card rounded-2xl border border-[#2A2A3E] p-6">
+              <AnimatePresence mode="wait">
+                {step === 0 && (
+                  <motion.div
+                    key="step0"
+                    initial={{ opacity: 0, x: 20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0, x: -20 }}
+                    className="flex flex-col gap-6"
+                  >
+                    <div>
+                      <h2 className="font-bold text-[#F1F5F9] text-xl mb-1">
+                        Elige tus tickets
+                      </h2>
+                      <p className="text-[#94A3B8] text-sm font-medium">
+                        Más tickets = más chances de ganar
+                      </p>
+                    </div>
+                    <TicketSelector
+                      ticketPrice={raffle.ticket_price}
+                      value={ticketCount}
+                      onChange={setTicketCount}
                     />
-                  </div>
-                  {phone.length > 0 && !isPhoneValid && (
-                    <p className="text-xs text-[#EF4444] font-inter">
-                      Ingresa un número válido de 9 dígitos que empiece en 9
-                    </p>
-                  )}
-                </div>
-              </motion.div>
-            )}
+                  </motion.div>
+                )}
 
-            {step === 2 && (
-              <motion.div
-                key="step2"
-                initial={{ opacity: 0, x: 20 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -20 }}
-                className="flex flex-col gap-4"
-              >
-                <div>
-                  <h2 className="font-bold text-[#F1F5F9] text-xl mb-1">
-                    Confirmar y pagar
-                  </h2>
-                  <p className="text-[#94A3B8] text-sm font-medium">
-                    Revisa tu pedido antes de pagar
-                  </p>
-                </div>
+                {step === 1 && (
+                  <motion.div
+                    key="step1"
+                    initial={{ opacity: 0, x: 20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0, x: -20 }}
+                    className="flex flex-col gap-6"
+                  >
+                    <div>
+                      <h2 className="font-bold text-[#F1F5F9] text-xl mb-1">
+                        Tus datos
+                      </h2>
+                      <p className="text-[#94A3B8] text-sm font-medium">
+                        Usamos tu DNI para identificarte y asignarte los tickets
+                      </p>
+                    </div>
 
-                {/* Summary */}
-                <div className="bg-[#1A1A2E] rounded-xl p-4 border border-[#2A2A3E] flex flex-col gap-3">
-                  <div className="flex justify-between items-center">
-                    <span className="text-[#94A3B8] text-sm font-inter">Participante</span>
-                    <span className="text-[#F1F5F9] font-inter text-sm font-medium">
-                      {dniData?.first_name} {dniData?.last_name}
-                    </span>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-[#94A3B8] text-sm font-inter">DNI</span>
-                    <span className="font-orbitron text-[#00F0FF]">{dniData?.dni}</span>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-[#94A3B8] text-sm font-inter">Tickets</span>
-                    <span className="font-orbitron font-bold text-[#F1F5F9]">
-                      {ticketCount}
-                      {bonus > 0 && (
-                        <span className="text-[#8B5CF6] ml-1">+{bonus}</span>
+                    <DniInput
+                      onSuccess={(result) => setDniData(result)}
+                      onClear={() => setDniData(null)}
+                    />
+
+                    <div className="flex flex-col gap-2">
+                      <label className="text-xs font-orbitron text-[#94A3B8] uppercase tracking-widest">
+                        Teléfono
+                      </label>
+                      <div className="relative">
+                        <Phone className={cn(
+                          "absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 transition-colors",
+                          phone.length > 0 && !isPhoneValid ? "text-[#EF4444]" : isPhoneValid ? "text-[#22C55E]" : "text-[#94A3B8]"
+                        )} />
+                        <input
+                          type="tel"
+                          inputMode="numeric"
+                          value={phone}
+                          onChange={(e) => {
+                            const digits = e.target.value.replace(/\D/g, "").slice(0, 9);
+                            setPhone(digits);
+                          }}
+                          placeholder="9xxxxxxxx"
+                          className={cn(
+                            "w-full bg-[#1A1A2E] border rounded-xl px-4 py-3.5 pl-10 text-[#F1F5F9] font-inter focus:outline-none focus:ring-1 transition-all",
+                            phone.length > 0 && !isPhoneValid
+                              ? "border-[#EF4444] focus:border-[#EF4444] focus:ring-[#EF4444]/30"
+                              : isPhoneValid
+                              ? "border-[#22C55E] focus:border-[#22C55E] focus:ring-[#22C55E]/30"
+                              : "border-[#2A2A3E] focus:border-[#00F0FF] focus:ring-[#00F0FF]/30"
+                          )}
+                        />
+                      </div>
+                      {phone.length > 0 && !isPhoneValid && (
+                        <p className="text-xs text-[#EF4444] font-inter">
+                          Ingresa un número válido de 9 dígitos que empiece en 9
+                        </p>
                       )}
-                      {" "}= {ticketCount + bonus} total
-                    </span>
-                  </div>
-                  <div className="border-t border-[#2A2A3E] pt-3 flex justify-between items-center">
-                    <span className="text-xs font-semibold text-[#94A3B8] uppercase tracking-wide">Total</span>
-                    <span className="font-extrabold text-2xl text-[#00F0FF]">
-                      {formatCurrency(totalAmount)}
-                    </span>
-                  </div>
-                </div>
+                    </div>
+                  </motion.div>
+                )}
 
+                {step === 2 && (
+                  <motion.div
+                    key="step2"
+                    initial={{ opacity: 0, x: 20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0, x: -20 }}
+                    className="flex flex-col gap-4"
+                  >
+                    <div>
+                      <h2 className="font-bold text-[#F1F5F9] text-xl mb-1">
+                        Confirmar y pagar
+                      </h2>
+                      <p className="text-[#94A3B8] text-sm font-medium">
+                        Revisa tu pedido antes de pagar
+                      </p>
+                    </div>
+
+                    {/* Summary */}
+                    <div className="bg-[#1A1A2E] rounded-xl p-4 border border-[#2A2A3E] flex flex-col gap-3">
+                      <div className="flex justify-between items-center">
+                        <span className="text-[#94A3B8] text-sm font-inter">Participante</span>
+                        <span className="text-[#F1F5F9] font-inter text-sm font-medium">
+                          {dniData?.first_name} {dniData?.last_name}
+                        </span>
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <span className="text-[#94A3B8] text-sm font-inter">DNI</span>
+                        <span className="font-orbitron text-[#00F0FF]">{dniData?.dni}</span>
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <span className="text-[#94A3B8] text-sm font-inter">Tickets</span>
+                        <span className="font-orbitron font-bold text-[#F1F5F9]">
+                          {ticketCount}
+                          {bonus > 0 && (
+                            <span className="ml-1" style={{ color: "#FACC15" }}>+{bonus}</span>
+                          )}
+                          {" "}= {ticketCount + bonus} total
+                        </span>
+                      </div>
+                      <div className="border-t border-[#2A2A3E] pt-3 flex justify-between items-center">
+                        <span className="text-xs font-semibold text-[#94A3B8] uppercase tracking-wide">Total</span>
+                        <span className="font-extrabold text-2xl text-[#00F0FF]">
+                          {formatCurrency(totalAmount)}
+                        </span>
+                      </div>
+                    </div>
+
+                    <button
+                      onClick={() => setPaymentOpen(true)}
+                      className="w-full flex items-center justify-center gap-3 bg-[#00F0FF] text-[#0A0A0F] font-orbitron font-black text-base rounded-2xl py-4 transition-all hover:brightness-110 animate-pulse-glow active:scale-95"
+                    >
+                      <CreditCard className="w-5 h-5" />
+                      Ver QR y pagar
+                      <ChevronRight className="w-5 h-5" />
+                    </button>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+
+            {/* Navigation buttons */}
+            <div className="flex gap-3">
+              {step > 0 && (
                 <button
-                  onClick={() => setPaymentOpen(true)}
-                  className="w-full flex items-center justify-center gap-3 bg-[#00F0FF] text-[#0A0A0F] font-orbitron font-black text-base rounded-2xl py-4 transition-all hover:brightness-110 animate-pulse-glow active:scale-95"
+                  onClick={() => setStep((s) => (s - 1) as Step)}
+                  className="flex items-center gap-2 border border-[#2A2A3E] text-[#94A3B8] font-orbitron text-sm rounded-2xl px-5 py-3.5 hover:border-[#2A2A3E] hover:text-[#F1F5F9] transition-all"
                 >
-                  <CreditCard className="w-5 h-5" />
-                  Ver QR y pagar
-                  <ChevronRight className="w-5 h-5" />
+                  <ChevronLeft className="w-4 h-4" />
+                  Atrás
                 </button>
-              </motion.div>
-            )}
-          </AnimatePresence>
-        </div>
-
-        {/* Navigation buttons */}
-        <div className="flex gap-3">
-          {step > 0 && (
-            <button
-              onClick={() => setStep((s) => (s - 1) as Step)}
-              className="flex items-center gap-2 border border-[#2A2A3E] text-[#94A3B8] font-orbitron text-sm rounded-2xl px-5 py-3.5 hover:border-[#2A2A3E] hover:text-[#F1F5F9] transition-all"
-            >
-              <ChevronLeft className="w-4 h-4" />
-              Atrás
-            </button>
-          )}
-
-          {step < 2 && (
-            <button
-              onClick={() => setStep((s) => (s + 1) as Step)}
-              disabled={step === 0 ? !canProceedStep0 : !canProceedStep1}
-              className={cn(
-                "flex-1 flex items-center justify-center gap-2 font-orbitron font-black text-base rounded-2xl py-3.5 transition-all",
-                (step === 0 ? canProceedStep0 : canProceedStep1)
-                  ? "bg-[#00F0FF] text-[#0A0A0F] hover:brightness-110 glow-cyan"
-                  : "bg-[#1A1A2E] text-[#94A3B8] cursor-not-allowed"
               )}
-            >
-              Continuar
-              <ChevronRight className="w-4 h-4" />
-            </button>
-          )}
+
+              {step < 2 && (
+                <button
+                  onClick={() => setStep((s) => (s + 1) as Step)}
+                  disabled={step === 0 ? !canProceedStep0 : !canProceedStep1}
+                  className={cn(
+                    "flex-1 flex items-center justify-center gap-2 font-orbitron font-black text-base rounded-2xl py-3.5 transition-all",
+                    (step === 0 ? canProceedStep0 : canProceedStep1)
+                      ? "bg-[#00F0FF] text-[#0A0A0F] hover:brightness-110 glow-cyan"
+                      : "bg-[#1A1A2E] text-[#94A3B8] cursor-not-allowed"
+                  )}
+                >
+                  Continuar
+                  <ChevronRight className="w-4 h-4" />
+                </button>
+              )}
+            </div>
+          </div>
         </div>
       </div>
 

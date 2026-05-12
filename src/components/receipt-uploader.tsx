@@ -24,7 +24,6 @@ export function ReceiptUploader({ onFile, onClear }: ReceiptUploaderProps) {
     try {
       let finalFile = rawFile;
 
-      // Compress if too large
       if (rawFile.size > MAX_RECEIPT_SIZE && rawFile.type.startsWith("image/")) {
         const blob = await compressImage(rawFile, TARGET_RECEIPT_WIDTH, TARGET_RECEIPT_QUALITY);
         finalFile = new File([blob], rawFile.name.replace(/\.[^.]+$/, ".jpg"), {
@@ -62,10 +61,6 @@ export function ReceiptUploader({ onFile, onClear }: ReceiptUploaderProps) {
 
   return (
     <div className="flex flex-col gap-3">
-      <label className="text-xs font-orbitron text-[#94A3B8] uppercase tracking-widest">
-        Comprobante de pago
-      </label>
-
       <AnimatePresence mode="wait">
         {preview ? (
           <motion.div
@@ -82,7 +77,7 @@ export function ReceiptUploader({ onFile, onClear }: ReceiptUploaderProps) {
             />
             <div className="absolute top-2 left-2 flex items-center gap-1.5 bg-[#22C55E] text-white text-xs rounded-full px-2.5 py-1 font-inter">
               <CheckCircle2 className="w-3 h-3" />
-              Subido
+              Comprobante adjunto
             </div>
             <button
               onClick={handleClear}
@@ -104,22 +99,25 @@ export function ReceiptUploader({ onFile, onClear }: ReceiptUploaderProps) {
               "rounded-xl border-2 border-dashed p-6 flex flex-col items-center gap-4 transition-all duration-200",
               isDragging
                 ? "border-[#00F0FF] bg-[#00F0FF]/5"
-                : "border-[#2A2A3E] bg-[#12121A]"
+                : "border-[#FACC15]/60 bg-[#FACC15]/5"
             )}
           >
             <div className="flex flex-col items-center gap-2 text-center">
               {compressing ? (
                 <>
-                  <ImageIcon className="w-8 h-8 text-[#00F0FF] animate-pulse" />
+                  <ImageIcon className="w-9 h-9 text-[#FACC15] animate-pulse" />
                   <p className="text-sm text-[#94A3B8]">Procesando imagen...</p>
                 </>
               ) : (
                 <>
-                  <Upload className="w-8 h-8 text-[#94A3B8]" />
-                  <p className="text-sm text-[#94A3B8]">
-                    Arrastra tu captura aquí o elige una opción
+                  <Upload
+                    className="w-9 h-9"
+                    style={{ color: "#FACC15", filter: "drop-shadow(0 0 8px rgba(250,204,21,0.5))" }}
+                  />
+                  <p className="text-sm font-semibold text-[#F1F5F9]">
+                    Adjunta la captura de tu pago
                   </p>
-                  <p className="text-xs text-[#94A3B8]/50">PNG, JPG hasta 6MB</p>
+                  <p className="text-xs text-[#94A3B8]/70">PNG, JPG hasta 6MB · arrastra o selecciona</p>
                 </>
               )}
             </div>
@@ -127,7 +125,12 @@ export function ReceiptUploader({ onFile, onClear }: ReceiptUploaderProps) {
             <button
               type="button"
               onClick={() => fileRef.current?.click()}
-              className="w-full flex items-center justify-center gap-2 bg-[#1A1A2E] border border-[#2A2A3E] hover:border-[#00F0FF]/40 text-[#94A3B8] hover:text-[#00F0FF] rounded-xl py-2.5 text-sm font-inter transition-all duration-200"
+              className="w-full flex items-center justify-center gap-2 rounded-xl py-2.5 text-sm font-orbitron font-bold transition-all duration-200"
+              style={{
+                backgroundColor: "#FACC15",
+                color: "#0A0A0F",
+                boxShadow: "0 0 16px rgba(250, 204, 21, 0.4)",
+              }}
             >
               <Upload className="w-4 h-4" />
               Seleccionar imagen

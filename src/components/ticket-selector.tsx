@@ -46,10 +46,10 @@ export function TicketSelector({ ticketPrice, value, onChange }: TicketSelectorP
               whileTap={{ scale: 0.96 }}
               style={isActive ? {
                 borderColor: tier.color,
-                backgroundColor: `${tier.color}15`,
+                backgroundColor: `${tier.color}18`,
               } : {}}
               className={cn(
-                "flex flex-col items-center justify-center gap-2 pixel-corners p-4 min-h-[110px] border transition-all duration-200",
+                "flex flex-col items-center justify-center gap-2 rounded-2xl p-4 min-h-[110px] border transition-all duration-200",
                 isActive
                   ? "border-transparent"
                   : "border-[#2A2A3E] bg-[#12121A] hover:border-[#2A2A3E]"
@@ -84,7 +84,7 @@ export function TicketSelector({ ticketPrice, value, onChange }: TicketSelectorP
 
       {/* Quick picks */}
       <div>
-        <p className="text-xs font-semibold text-[#94A3B8] uppercase tracking-widest mb-3">
+        <p className="text-xs font-semibold text-[#F1F5F9] uppercase tracking-widest mb-3">
           Seleccionar cantidad
         </p>
         <div className="grid grid-cols-5 gap-2">
@@ -115,7 +115,13 @@ export function TicketSelector({ ticketPrice, value, onChange }: TicketSelectorP
                   {qty === 1 ? "ticket" : "tickets"}
                 </span>
                 {qBonus > 0 && (
-                  <span className="absolute -top-1.5 -right-1.5 bg-[#FF3E9A] text-white text-[8px] font-bold rounded-full px-1 leading-4">
+                  <span
+                    className="absolute -top-2 -right-2 text-[#0A0A0F] text-[10px] font-black rounded-full px-1.5 py-0.5 leading-tight"
+                    style={{
+                      backgroundColor: "#FACC15",
+                      boxShadow: "0 0 8px rgba(250, 204, 21, 0.6)",
+                    }}
+                  >
                     +{qBonus}
                   </span>
                 )}
@@ -130,14 +136,15 @@ export function TicketSelector({ ticketPrice, value, onChange }: TicketSelectorP
         <button
           onClick={() => { setCustomMode(true); setCustomInput(value.toString()); }}
           className={cn(
-            "w-full flex items-center justify-center gap-2 rounded-xl py-2.5 border text-sm transition-all duration-200",
+            "w-full flex items-center justify-center gap-2 rounded-xl py-3 border text-sm font-semibold transition-all duration-200",
             customMode
-              ? "border-[#00F0FF]/50 bg-[#1A1A2E] text-[#00F0FF]"
-              : "border-[#2A2A3E] bg-[#12121A] text-[#94A3B8] hover:border-[#2A2A3E]"
+              ? "border-[#8B5CF6] bg-[#8B5CF6]/20 text-[#8B5CF6]"
+              : "border-[#8B5CF6]/50 bg-[#8B5CF6]/10 text-[#8B5CF6] hover:bg-[#8B5CF6]/20 hover:border-[#8B5CF6]"
           )}
+          style={!customMode ? { boxShadow: "0 0 12px rgba(139, 92, 246, 0.15)" } : {}}
         >
-          <Zap className="w-3.5 h-3.5" />
-          Cantidad personalizada
+          <Zap className="w-4 h-4" />
+          ¿Otra cantidad? Personalizar
         </button>
         <AnimatePresence>
           {customMode && (
@@ -183,7 +190,7 @@ export function TicketSelector({ ticketPrice, value, onChange }: TicketSelectorP
             </div>
 
             {bonus > 0 && (
-              <div className="flex items-center justify-between text-[#8B5CF6]">
+              <div className="flex items-center justify-between" style={{ color: "#FACC15" }}>
                 <div className="flex items-center gap-2 text-sm">
                   <Star className="w-4 h-4" />
                   <span>Bonus promo &quot;{activePromo?.badge}&quot;</span>
