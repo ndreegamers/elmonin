@@ -7,13 +7,13 @@ import Link from "next/link";
 import Image from "next/image";
 import {
   Ticket, User, CreditCard, CheckCircle2,
-  ChevronLeft, ChevronRight, Loader2, Phone, ArrowLeft
+  ChevronLeft, ChevronRight, Loader2, Phone, ArrowLeft, Calendar
 } from "lucide-react";
 import { TicketSelector } from "@/components/ticket-selector";
 import { DniInput } from "@/components/dni-input";
 import { PaymentModal } from "@/components/payment-modal";
 import { calculateBonus } from "@/lib/constants";
-import { formatCurrency } from "@/lib/utils";
+import { formatCurrency, formatDateShort } from "@/lib/utils";
 import { DniLookupResult, RaffleWithStats } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
@@ -203,8 +203,8 @@ export function PartiparContent() {
         {/* Split layout: image left + purchase form right */}
         <div className="flex flex-col lg:flex-row gap-6 lg:items-start">
 
-          {/* Left column — raffle image */}
-          <div className="lg:w-[48%] lg:sticky lg:top-8 flex-shrink-0">
+          {/* Left column — raffle image + description */}
+          <div className="lg:w-[48%] lg:sticky lg:top-8 flex-shrink-0 flex flex-col gap-4">
             <div className="relative w-full aspect-[4/3] rounded-2xl overflow-hidden border border-[#2A2A3E]">
               <Image
                 src={raffle.image_url}
@@ -214,6 +214,23 @@ export function PartiparContent() {
                 sizes="(max-width: 1024px) 100vw, 48vw"
                 priority
               />
+            </div>
+
+            <div className="glass-card rounded-2xl border border-[#2A2A3E] p-5 flex flex-col gap-3">
+              <h2 className="font-extrabold text-xl sm:text-2xl text-[#F1F5F9] leading-tight">
+                {raffle.title}
+              </h2>
+              <div className="flex items-center gap-2 text-[#00F0FF]">
+                <Calendar className="w-4 h-4 flex-shrink-0" />
+                <span className="text-sm font-semibold font-orbitron">
+                  {formatDateShort(raffle.draw_date)}
+                </span>
+              </div>
+              {raffle.description && (
+                <p className="text-[#94A3B8] text-sm leading-relaxed whitespace-pre-line pt-1 border-t border-[#2A2A3E]">
+                  {raffle.description}
+                </p>
+              )}
             </div>
           </div>
 
