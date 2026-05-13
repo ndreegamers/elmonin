@@ -69,7 +69,6 @@ export function RaffleHero({ raffle, index = 0 }: RaffleHeroProps) {
             href={`/participar?raffle=${raffle.id}`}
             className="mt-auto w-full flex items-center justify-center gap-2 bg-[#00F0FF] text-[#0A0A0F] font-extrabold text-lg rounded-xl py-4 transition-all duration-200 hover:brightness-110 active:scale-[0.98]"
           >
-            <Ticket className="w-5 h-5" />
             PARTICIPA AHORA
             <ChevronRight className="w-4 h-4" />
           </Link>
